@@ -461,50 +461,198 @@ def clear():
     os.system("cls" if os.name == "nt" else "clear")
 
 
-def typing_animation(text, delay=0.04, style="bold cyan"):
-    """Ek-ek letter type hone wala effect."""
+# ---------- MATRIX + ANIMATIONS ----------
+
+MATRIX_CHARS = "01アイウエオカキクケコサシスセソNERD"
+
+
+def matrix_rain(duration=2.5, speed=0.04):
+    """
+    Matrix-style green rain animation.
+    Falls for `duration` seconds, then clears itself.
+    """
+    import random as _r
+
+    try:
+        cols = console.width
+        rows = min(shutil.get_terminal_size((80, 20)).lines - 2, 18)
+    except Exception:
+        cols, rows = 80, 18
+
+    # har column ki apni speed + position
+    drops = [_r.randint(-rows, 0) for _ in range(cols)]
+    speeds = [_r.randint(1, 3) for _ in range(cols)]
+
+    end = time.time() + duration
+    frame = 0
+
+    # hide cursor
+    sys.stdout.write("\033[?25l")
+    sys.stdout.flush()
+
+    try:
+        while time.time() < end:
+            frame += 1
+            # build a frame buffer of size rows x cols
+            grid = [[" " for _ in range(cols)] for _ in range(rows)]
+
+            for c in range(cols):
+                head = drops[c]
+                for r in range(rows):
+                    if r == head:
+                        grid[r][c] = _r.choice(MATRIX_CHARS)
+                    elif head - 6 <= r < head:
+                        grid[r][c] = _r.choice(MATRIX_CHARS)
+                # advance drop
+                if frame % speeds[c] == 0:
+                    drops[c] += 1
+                if drops[c] > rows + 6:
+                    drops[c] = _r.randint(-10, -1)
+
+            # render with green fade — head bright white, trail green
+            output = []
+            for r in range(rows):
+                line_parts = []
+                for c in range(cols):
+                    ch = grid[r][c]
+                    if ch == " ":
+                        line_parts.append(" ")
+                    elif r == drops[c] and ch != " ":
+                        line_parts.append(f"\033[1;97m{ch}\033[0m")   # bright white
+                    else:
+                        # greenish trail
+                        line_parts.append(f"\033[1;32m{ch}\033[0m")
+                output.append("".join(line_parts))
+
+            sys.stdout.write("\033[H" + "\n".join(output))
+            sys.stdout.flush()
+            time.sleep(speed)
+
+    finally:
+        # show cursor + clear
+        sys.stdout.write("\033[?25h")
+        sys.stdout.flush()
+        clear()
+
+
+def nerd_glow_banner():
+    """
+    NERD banner jo dheere-dheere glow hota hai.
+    Bright green → white → back to green (pulse effect).
+    """
+    art = BANNER_SAFE if SAFE_MODE else BANNER_ASCII
+    clear()
+
+    pulse_styles = [
+        "bold green", "bold green", "bold spring_green2",
+        "bold spring_green1", "bold white", "bold spring_green1",
+        "bold spring_green2", "bold green", "bold green",
+    ]
+
+    for style in pulse_styles:
+        console.clear()
+        console.print(Align.center(Text(art, style=style)))
+        console.print()
+        console.print(Align.center(Text(
+            f"  {TOOL}  •  v{VERSION}  ",
+            style="bold white on green")))
+        time.sleep(0.12)
+
+
+def typing_animation(text, delay=0.07, style="bold cyan",
+                     header=False, footer_text=None):
+    """
+    Smooth typewriter — ek-ek letter type hoga, NO flicker.
+    """
+    art = BANNER_SAFE if SAFE_MODE else BANNER_ASCII
+
+    if header:
+        console.clear()
+        console.print(Align.center(Text(art, style="bold green")))
+        console.print()
+        console.print(Align.center(Text(
+            f"  {TOOL}  •  v{VERSION}  ",
+            style="bold white on green")))
+        console.print()
+
     t = Text()
     for ch in text:
         t.append(ch, style=style)
-        console.clear()
-        art = BANNER_SAFE if SAFE_MODE else BANNER_ASCII
-        console.print(Align.center(Text(art, style="bold green")))
-        console.print(Align.center(Text(
-            f" {TOOL}  •  v{VERSION} ",
-            style="bold white on red")))
-        console.print(Align.center(t))
+        console.print(Align.center(t), end="\r")
         time.sleep(delay)
 
+    sys.stdout.write("\n")
+    sys.stdout.flush()
 
-def loading_dots(text="Loading", duration=1.5):
-    """Simple dots animation."""
-    end = time.time() + duration
-    dots = 0
-    while time.time() < end:
-        sys.stdout.write(
-            f"\r[bold green]{text}{'.' * (dots % 4)}[/bold green]   ")
+    if footer_text:
+        console.print()
+        console.print(Align.center(Text(footer_text, style="bold yellow")))
+
+
+def loading_bar(text="Initializing", duration=2.0, width=28):
+    """Elegant loading bar — smooth animation."""
+    steps = int(duration / 0.04)
+    for i in range(steps + 1):
+        pct = i / steps
+        filled = int(width * pct)
+        bar = "█" * filled + "░" * (width - filled)
+        line = f"  {text}  [{bar}]  {int(pct * 100):3d}%"
+        sys.stdout.write("\r" + line)
         sys.stdout.flush()
-        time.sleep(0.25)
-        dots += 1
-    sys.stdout.write("\r" + " " * 50 + "\r")
+        time.sleep(0.04)
+    sys.stdout.write("\n\n")
     sys.stdout.flush()
 
 
 def welcome_animation():
-    """Startup pe Welcome Nerd animation."""
+    """
+    Full cinematic startup:
+      Stage 1 — Matrix rain (2.5s)
+      Stage 2 — NERD banner glow pulse
+      Stage 3 — 'Welcome Nerd' typewriter
+      Stage 4 — Loading bar
+    """
+    # STAGE 1: Matrix rain
+    matrix_rain(duration=2.5, speed=0.04)
+
+    # STAGE 2: Banner glow pulse
+    nerd_glow_banner()
+
+    # STAGE 3: Welcome Nerd typewriter
     clear()
     art = BANNER_SAFE if SAFE_MODE else BANNER_ASCII
     console.print(Align.center(Text(art, style="bold green")))
     console.print()
-    typing_animation("Welcome Nerd", delay=0.08, style="bold cyan")
+    console.print(Align.center(Text(
+        f"  {TOOL}  •  v{VERSION}  ",
+        style="bold white on green")))
+    console.print()
+    typing_animation("Welcome Nerd", delay=0.10, style="bold cyan")
+
+    # STAGE 4: loading bar
     console.print()
     console.print(Align.center(Text(
         f"Telegram: {CH_TELEGRAM_1}", style="bold yellow")))
-    console.print(Align.center(Text(
-        f"Made by {DEVELOPER}", style="dim")))
     console.print()
-    loading_dots("Initializing Nerd Osint Lookup", 1.5)
-    time.sleep(0.4)
+    loading_bar("Starting NERD OSINT", duration=1.8)
+
+    console.print(Align.center(Text(
+        f"Made by {DEVELOPER}", style="dim italic")))
+    time.sleep(0.6)
+    clear()
+
+
+def banner():
+    """Main menu banner."""
+    clear()
+    art = BANNER_SAFE if SAFE_MODE else BANNER_ASCII
+    console.print(Align.center(Text(art, style="bold green")))
+    console.print(Align.center(Text(
+        f" {TOOL}  •  v{VERSION} ", style="bold white on green")))
+    console.print(Align.center(Text(
+        f"Developed by {DEVELOPER}   |   {DEV_TAG}",
+        style="bold cyan")))
+    console.print()
 
 
 def banner():
