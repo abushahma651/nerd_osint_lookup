@@ -301,100 +301,173 @@ def sparkle_intro(duration=1.2):
         sys.stdout.flush()
         clear()
 
-def banner_reveal(delay=0.09):
-    art = BANNER_SAFE if SAFE_MODE else BANNER_ASCII
-    lines = [ln for ln in art.strip("\n").split("\n")]
-    for i in range(len(lines)):
-        clear()
-        for j, ln in enumerate(lines):
-            if j < i:
-                _center(ln, "bold spring_green2")
-            elif j == i:
-                _center(ln, "bold white")
-        time.sleep(delay)
+# ---------- AESTHETIC ANIMATIONS ----------
 
-def glitch_flash(times=3):
-    art = BANNER_SAFE if SAFE_MODE else BANNER_ASCII
-    colors = ["bold red", "bold white", "bold cyan", "bold magenta", "bold green"]
-    for _ in range(times):
-        for c in colors:
-            clear()
-            _center(art, c)
-            time.sleep(0.03)
+# premium palette — cyan & magenta only
+CYAN   = "bold cyan"
+MAG    = "bold magenta"
+DIM_C  = "cyan"
+DIM_M  = "magenta"
+WHITE  = "bold white"
 
-def neon_pulse(cycles=2):
-    art = BANNER_SAFE if SAFE_MODE else BANNER_ASCII
-    palette = ["bold green", "bold spring_green1", "bold cyan",
-               "bold bright_white", "bold cyan", "bold spring_green1", "bold green"]
-    for _ in range(cycles):
-        for c in palette:
-            clear()
-            _center(art, c)
-            _center(f"  {TOOL}  •  v{VERSION}  ", "bold white on green")
-            time.sleep(0.07)
 
-def gradient_typing(text, delay=0.09):
+def _center(text, style=""):
+    console.print(Align.center(Text(text, style=style)))
+
+
+def _sleep(ms):
+    time.sleep(ms / 1000)
+
+
+def soft_banner(delay=0.35):
+    """Banner fade-in — 3 steps, smooth."""
     art = BANNER_SAFE if SAFE_MODE else BANNER_ASCII
-    gradient = ["bold green", "bold spring_green1", "bold spring_green2",
-                "bold cyan", "bold bright_cyan", "bold white",
-                "bold bright_cyan", "bold cyan",
-                "bold spring_green2", "bold spring_green1", "bold green"]
+    steps = [
+        ("bold grey50", 0.2),
+        (CYAN, 0.25),
+        (WHITE, 0.3),
+    ]
     clear()
-    _center(art, "bold green")
-    _center(f"  {TOOL}  •  v{VERSION}  ", "bold white on green")
+    for style, d in steps:
+        clear()
+        _center(art, style)
+        _sleep(d * 1000)
+
+    # subtitle appears after banner
+    _sleep(200)
+    _center(f"  {TOOL}  •  v{VERSION}  ", "bold white on grey23")
+    _sleep(180)
     console.print()
+
+
+def welcome_typing():
+    """
+    'Welcome Nerd' — ek line mein smooth typing,
+    cyan → white gradient ke saath.
+    """
+    text = "Welcome Nerd"
+    # per-character colour: cyan → magenta gradient feel
+    palette = [CYAN, CYAN, DIM_C, DIM_C, WHITE, WHITE, DIM_C, DIM_C, MAG, MAG, CYAN, CYAN]
+
     t = Text()
     for i, ch in enumerate(text):
-        t.append(ch, style=gradient[i % len(gradient)])
+        t.append(ch, style=palette[i % len(palette)])
         console.print(Align.center(t), end="\r")
-        time.sleep(delay)
+        _sleep(65)
+
     sys.stdout.write("\n\n")
     sys.stdout.flush()
 
-def rainbow_bar(text="Initializing", duration=2.0, width=30):
-    steps = int(duration / 0.04)
-    colors = ["red", "yellow", "green", "cyan", "blue", "magenta"]
+
+def loading_bar(text="Initializing", duration=1.8, width=26):
+    """Sleek loading bar — cyan fill only. No rainbow."""
+    steps = int(duration / 0.035)
     for i in range(steps + 1):
         pct = i / steps
         filled = int(width * pct)
-        col = colors[(i // 5) % len(colors)]
-        bar = f"[{col}]" + "█" * filled + "[/]" + "░" * (width - filled)
-        line = f"  {text}  {bar}  {int(pct * 100):3d}%"
-        sys.stdout.write("\r" + line)
+        bar = "▓" * filled + "░" * (width - filled)
+        line = f"  [grey50]{text}[/grey50]  [cyan]{bar}[/cyan]  [white]{int(pct*100):3d}%[/white]"
+        console.print(Align.center(Text.from_markup(line)), end="\r")
         sys.stdout.flush()
-        time.sleep(0.04)
-    sys.stdout.write("\n\n")
+        _sleep(35)
+    sys.stdout.write("\n")
     sys.stdout.flush()
 
+
+def loading_spinner(text="Connecting", duration=1.2):
+    """Soft rotating spinner — aesthetic braille dots."""
+    frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+    end = time.time() + duration
+    i = 0
+    while time.time() < end:
+        console.print(
+            Align.center(Text.from_markup(
+                f"[cyan]{frames[i % len(frames)]}[/cyan]  [grey50]{text}[/grey50]"
+            )),
+            end="\r"
+        )
+        sys.stdout.flush()
+        _sleep(85)
+        i += 1
+    sys.stdout.write("\r" + " " * 60 + "\r")
+    sys.stdout.flush()
+
+
 def welcome_animation():
-    sparkle_intro(duration=1.2)
-    banner_reveal(delay=0.09)
-    glitch_flash(times=3)
-    neon_pulse(cycles=2)
-    clear()
-    art = BANNER_SAFE if SAFE_MODE else BANNER_ASCII
-    _center(art, "bold green")
-    _center(f"  {TOOL}  •  v{VERSION}  ", "bold white on green")
+    """Full cinematic intro — 6 seconds, pure elegance."""
+
+    # Stage 1: soft banner fade-in
+    soft_banner()
+
+    # Stage 2: subtitle details
+    _center("◆   O S I N T   L O O K U P   ◆", DIM_C)
+    _sleep(280)
+    _center(f"by {DEVELOPER}", "grey50")
+    _sleep(280)
     console.print()
-    _center("◆  OSINT  LOOKUP  ENGINE  ◆", "bold cyan")
-    time.sleep(0.2)
-    _center(f"Developed by  {DEVELOPER}", "bold white")
-    time.sleep(0.2)
+
+    # Stage 3: Welcome Nerd typing
+    welcome_typing()
+
+    # Stage 4: separator
+    _center("· · · · · · · · · · · · · · · · · · ·", "grey30")
+    _sleep(300)
+
+    # Stage 5: telegram
+    _center(f"Telegram  →  {CH_TELEGRAM_1}", DIM_M)
+    _sleep(300)
     console.print()
-    gradient_typing("Welcome Nerd", delay=0.10)
-    _center(f"Telegram: {CH_TELEGRAM_1}", "bold yellow")
-    console.print()
-    rainbow_bar("Starting NERD OSINT", duration=1.8)
-    _center(f"Made by {DEVELOPER}", "dim italic")
-    time.sleep(0.6)
+
+    # Stage 6: loading bar
+    loading_bar("Starting engine", duration=1.6)
+
+    # Stage 7: spinner
+    loading_spinner("Initializing modules", duration=1.0)
+
+    _sleep(300)
     clear()
 
+
+def warn_fade_in():
+    """Warning panel fade-in."""
+    for shade in ["grey30", "grey50", "grey70", "red"]:
+        clear()
+        _center(BANNER_SAFE if SAFE_MODE else BANNER_ASCII, CYAN)
+        console.print()
+        body = Text()
+        body.append("READ BEFORE USE\n\n", style=f"bold {shade}")
+        body.append("This tool is only for checking YOUR OWN number.\n", style="grey70")
+        body.append("Illegal use is punishable under IT Act Section 66.\n\n", style="grey70")
+        body.append("Use at your own risk.", style="grey50")
+        console.print(Panel(body, border_style=shade, box=ROUNDED))
+        _sleep(120)
+
+
+def dev_fade_in():
+    """Developer panel fade-in."""
+    for shade in ["grey30", "grey50", "cyan"]:
+        body = Text()
+        body.append("Developer  : ", style=f"bold {shade}")
+        body.append(f"{DEVELOPER}\n", style="white")
+        body.append("Brand      : ", style=f"bold {shade}")
+        body.append(f"{BRAND}\n", style="white")
+        body.append("Version    : ", style=f"bold {shade}")
+        body.append(f"v{VERSION}\n", style="white")
+        body.append("Telegram   : ", style=f"bold {shade}")
+        body.append(f"{CH_TELEGRAM_1}\n", style="cyan")
+        console.print(Panel(body,
+                            title=f"[{shade}]◇  DEVELOPER  ◇[/{shade}]",
+                            border_style=shade, box=ROUNDED))
+        _sleep(180)
+
+
 def banner():
+    """Menu banner — clean, minimal, elegant."""
     clear()
     art = BANNER_SAFE if SAFE_MODE else BANNER_ASCII
-    _center(art, "bold green")
-    _center(f" {TOOL}  •  v{VERSION} ", "bold white on green")
-    _center(f"Developed by {DEVELOPER}   |   {DEV_TAG}", "bold cyan")
+    _center(art, CYAN)
+    _center(f" {TOOL}  •  v{VERSION} ", "bold white on grey23")
+    _center(f"{DEVELOPER}  •  {DEV_TAG}", "grey50")
     console.print()
 
 # ---------- PANELS ----------
