@@ -775,39 +775,48 @@ def manual_update():
 def main():
     check_for_update()
     welcome_animation()
-    warning_panel()
+
+    # warning with fade-in
+    warn_fade_in()
+
     console.print()
-    developer_panel()
+    # developer panel with fade-in
+    dev_fade_in()
+
     console.print()
-    Prompt.ask("[bold yellow]press ENTER to start[/bold yellow]", default="", show_default=False)
+    console.print(Align.center(Text.from_markup(
+        "[bold cyan]press ENTER to start[/bold cyan]")))
+    input()
 
     while True:
         banner()
-        console.print(Panel(MENU, border_style="green",
-                            title="[bold green]◇ MAIN MENU ◇[/bold green]"))
-        console.print(f"[dim]{session_stats()}[/dim]")
+        console.print(Panel(MENU, border_style="cyan",
+                            title="[bold cyan]◇  MAIN MENU  ◇[/bold cyan]",
+                            box=ROUNDED))
+        console.print(Align.center(Text.from_markup(
+            f"[grey50]{session_stats()}[/grey50]")))
         console.print()
-        choice = Prompt.ask("[bold green]  ➤ choose[/bold green]",
-                            choices=["1","2","3","4","5","6","7"], default="1")
-        if choice == "1": single_lookup()
-        elif choice == "2": bulk_lookup()
-        elif choice == "3": about_dev()
+        choice = Prompt.ask("[bold cyan]  ➤[/bold cyan]",
+                            choices=["1", "2", "3", "4", "5", "6", "7"], default="1")
+        if choice == "1":
+            single_lookup()
+        elif choice == "2":
+            bulk_lookup()
+        elif choice == "3":
+            about_dev()
         elif choice == "4":
             console.print()
-            console.print(Panel(session_stats(), title="[bold]SESSION[/bold]", border_style="green"))
-            Prompt.ask("[dim]press ENTER[/dim]", default="", show_default=False)
-        elif choice == "5": clear_cache()
-        elif choice == "6": manual_update()
+            console.print(Panel(session_stats(), title="[bold cyan]SESSION[/bold cyan]",
+                                border_style="cyan", box=ROUNDED))
+            Prompt.ask("[grey50]press ENTER[/grey50]", default="", show_default=False)
+        elif choice == "5":
+            clear_cache()
+        elif choice == "6":
+            manual_update()
         elif choice == "7":
             console.print()
-            console.print(Align.center(Text(f"🔥 {BRAND} — stay safe. {DEV_TAG} 🔥", style="bold green")))
+            console.print(Align.center(Text.from_markup(
+                f"[bold cyan]{BRAND}[/bold cyan]  •  [grey50]stay safe[/grey50]  •  "
+                f"[bold magenta]{DEV_TAG}[/bold magenta]")))
             footer()
             sys.exit(0)
-
-if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        console.print()
-        console.print(Align.center(Text(f"\n🔥 {BRAND} out. {CH_TELEGRAM_1} 🔥", style="bold red")))
-        sys.exit(0)
