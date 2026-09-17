@@ -593,10 +593,128 @@ def loading_bar(text="Initializing", duration=2.0, width=28):
     """Elegant loading bar — smooth animation."""
     steps = int(duration / 0.04)
     for i in range(steps + 1):
+# ---------- CINEMATIC ANIMATIONS ----------
+
+import random as _rand
+
+
+def _center(text, style=""):
+    console.print(Align.center(Text(text, style=style)))
+
+
+def sparkle_intro(duration=1.4):
+    """Random green dots chamakte hain screen pe."""
+    try:
+        cols = console.width
+        rows = min(shutil.get_terminal_size((80, 20)).lines - 2, 16)
+    except Exception:
+        cols, rows = 80, 16
+
+    sys.stdout.write("\033[?25l")
+    sys.stdout.flush()
+    end = time.time() + duration
+    chars = ["·", "∙", "•", "✦", "✧", "*", "°"]
+
+    try:
+        while time.time() < end:
+            buf = [[" " for _ in range(cols)] for _ in range(rows)]
+            for _ in range(_rand.randint(12, 25)):
+                r = _rand.randint(0, rows - 1)
+                c = _rand.randint(0, cols - 1)
+                buf[r][c] = _rand.choice(chars)
+            out = []
+            for row in buf:
+                line = "".join(
+                    f"\033[1;32m{ch}\033[0m" if ch != " " else " "
+                    for ch in row
+                )
+                out.append(line)
+            sys.stdout.write("\033[H" + "\n".join(out))
+            sys.stdout.flush()
+            time.sleep(0.08)
+    finally:
+        sys.stdout.write("\033[?25h")
+        sys.stdout.flush()
+        clear()
+
+
+def banner_reveal(delay=0.09):
+    """NERD banner — line by line reveal."""
+    art = BANNER_SAFE if SAFE_MODE else BANNER_ASCII
+    lines = [ln for ln in art.strip("\n").split("\n")]
+    for i in range(len(lines)):
+        clear()
+        for j, ln in enumerate(lines):
+            if j < i:
+                _center(ln, "bold spring_green2")
+            elif j == i:
+                _center(ln, "bold white")
+        time.sleep(delay)
+
+
+def glitch_flash(times=4):
+    """Banner pe glitch flash — quick color changes."""
+    art = BANNER_SAFE if SAFE_MODE else BANNER_ASCII
+    colors = ["bold red", "bold white", "bold cyan",
+              "bold magenta", "bold green"]
+    for _ in range(times):
+        for c in colors:
+            clear()
+            _center(art, c)
+            time.sleep(0.03)
+
+
+def neon_pulse(cycles=2):
+    """Banner neon glow pulse."""
+    art = BANNER_SAFE if SAFE_MODE else BANNER_ASCII
+    palette = [
+        "bold green", "bold spring_green1", "bold cyan",
+        "bold bright_white", "bold cyan",
+        "bold spring_green1", "bold green",
+    ]
+    for _ in range(cycles):
+        for c in palette:
+            clear()
+            _center(art, c)
+            _center(f"  {TOOL}  •  v{VERSION}  ",
+                    "bold white on green")
+            time.sleep(0.07)
+
+
+def gradient_typing(text, delay=0.09):
+    """Welcome Nerd — gradient color typing."""
+    art = BANNER_SAFE if SAFE_MODE else BANNER_ASCII
+    gradient = [
+        "bold green", "bold spring_green1", "bold spring_green2",
+        "bold cyan", "bold bright_cyan", "bold white",
+        "bold bright_cyan", "bold cyan",
+        "bold spring_green2", "bold spring_green1", "bold green",
+    ]
+
+    clear()
+    _center(art, "bold green")
+    _center(f"  {TOOL}  •  v{VERSION}  ", "bold white on green")
+    console.print()
+
+    t = Text()
+    for i, ch in enumerate(text):
+        t.append(ch, style=gradient[i % len(gradient)])
+        console.print(Align.center(t), end="\r")
+        time.sleep(delay)
+    sys.stdout.write("\n\n")
+    sys.stdout.flush()
+
+
+def rainbow_bar(text="Initializing", duration=2.0, width=30):
+    """Rainbow loading bar."""
+    steps = int(duration / 0.04)
+    colors = ["red", "yellow", "green", "cyan", "blue", "magenta"]
+    for i in range(steps + 1):
         pct = i / steps
         filled = int(width * pct)
-        bar = "█" * filled + "░" * (width - filled)
-        line = f"  {text}  [{bar}]  {int(pct * 100):3d}%"
+        col = colors[(i // 5) % len(colors)]
+        bar = f"[{col}]" + "█" * filled + "[/]" + "░" * (width - filled)
+        line = f"  {text}  {bar}  {int(pct * 100):3d}%"
         sys.stdout.write("\r" + line)
         sys.stdout.flush()
         time.sleep(0.04)
@@ -605,39 +723,30 @@ def loading_bar(text="Initializing", duration=2.0, width=28):
 
 
 def welcome_animation():
-    """
-    Full cinematic startup:
-      Stage 1 — Matrix rain (2.5s)
-      Stage 2 — NERD banner glow pulse
-      Stage 3 — 'Welcome Nerd' typewriter
-      Stage 4 — Loading bar
-    """
-    # STAGE 1: Matrix rain
-    matrix_rain(duration=2.5, speed=0.04)
+    """Full cinematic startup."""
+    sparkle_intro(duration=1.2)
+    banner_reveal(delay=0.09)
+    glitch_flash(times=3)
+    neon_pulse(cycles=2)
 
-    # STAGE 2: Banner glow pulse
-    nerd_glow_banner()
-
-    # STAGE 3: Welcome Nerd typewriter
     clear()
     art = BANNER_SAFE if SAFE_MODE else BANNER_ASCII
-    console.print(Align.center(Text(art, style="bold green")))
+    _center(art, "bold green")
+    _center(f"  {TOOL}  •  v{VERSION}  ", "bold white on green")
     console.print()
-    console.print(Align.center(Text(
-        f"  {TOOL}  •  v{VERSION}  ",
-        style="bold white on green")))
-    console.print()
-    typing_animation("Welcome Nerd", delay=0.10, style="bold cyan")
+    _center("◆  OSINT  LOOKUP  ENGINE  ◆", "bold cyan")
+    time.sleep(0.2)
+    _center(f"Developed by  {DEVELOPER}", "bold white")
+    time.sleep(0.2)
 
-    # STAGE 4: loading bar
     console.print()
-    console.print(Align.center(Text(
-        f"Telegram: {CH_TELEGRAM_1}", style="bold yellow")))
-    console.print()
-    loading_bar("Starting NERD OSINT", duration=1.8)
+    gradient_typing("Welcome Nerd", delay=0.10)
 
-    console.print(Align.center(Text(
-        f"Made by {DEVELOPER}", style="dim italic")))
+    _center(f"Telegram: {CH_TELEGRAM_1}", "bold yellow")
+    console.print()
+    rainbow_bar("Starting NERD OSINT", duration=1.8)
+
+    _center(f"Made by {DEVELOPER}", "dim italic")
     time.sleep(0.6)
     clear()
 
@@ -646,23 +755,9 @@ def banner():
     """Main menu banner."""
     clear()
     art = BANNER_SAFE if SAFE_MODE else BANNER_ASCII
-    console.print(Align.center(Text(art, style="bold green")))
-    console.print(Align.center(Text(
-        f" {TOOL}  •  v{VERSION} ", style="bold white on green")))
-    console.print(Align.center(Text(
-        f"Developed by {DEVELOPER}   |   {DEV_TAG}",
-        style="bold cyan")))
-    console.print()
-
-
-def banner():
-    clear()
-    art = BANNER_SAFE if SAFE_MODE else BANNER_ASCII
-    console.print(Align.center(Text(art, style="bold green")))
-    console.print(Align.center(Text(
-        f" {TOOL}  •  v{VERSION} ", style="bold white on red")))
-    console.print(Align.center(Text(
-        f"Developed by {DEVELOPER}   |   {DEV_TAG}", style="bold cyan")))
+    _center(art, "bold green")
+    _center(f" {TOOL}  •  v{VERSION} ", "bold white on green")
+    _center(f"Developed by {DEVELOPER}   |   {DEV_TAG}", "bold cyan")
     console.print()
 
 
